@@ -1,4 +1,5 @@
 import sys
+import os
 import csv
 from collections import defaultdict
 from datetime import datetime
@@ -36,6 +37,7 @@ def main():
         sys.exit(1)
 
     file_path = sys.argv[1]
+    path = os.path.dirname(file_path)
 
     try:
         workbook = load_workbook(filename=file_path, read_only=True, data_only=True)
@@ -52,10 +54,11 @@ def main():
         sys.exit(1)
 
     sheet = workbook[sheet_name]
-
+    sheet.reset_dimensions()   # forces openpyxl to recalculate
+    sheet.calculate_dimension(force=True)
     if sheet.max_column != 3:
-        print(f"Error: Sheet '{sheet_name}' does not have exactly 3 columns (found {sheet.max_column}).")
-        sys.exit(1)
+        print(f"Warning: Sheet '{sheet_name}' does not have exactly 3 columns (found {sheet.max_column}).")
+        #sys.exit(1)
 
     rows = sheet.iter_rows(values_only=True)
 
@@ -66,7 +69,7 @@ def main():
 
     second_col_header = str(header[1]).strip()
     outputfile = second_col_header.split()[0].lower()
-    output_csv = f"{outputfile}.csv"
+    output_csv = f"{path}/{outputfile}.csv"
 
     result = defaultdict(dict)
     all_sites = set()
